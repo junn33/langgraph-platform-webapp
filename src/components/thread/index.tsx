@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
+import { getThreadSearchMetadata, useThreads } from "@/providers/Thread";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -85,6 +86,8 @@ export function Thread() {
   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
 
   const stream = useStreamContext();
+  const { userId } = useThreads();
+  
   const messages = stream.messages;
   const isLoading = stream.isLoading;
 
@@ -148,7 +151,7 @@ export function Thread() {
       { messages: [...toolMessages, newHumanMessage] },
       {
         streamMode: ["values"],
-        optimisticValues: (prev) => ({
+        optimisticValues: (prev: any) => ({
           ...prev,
           messages: [
             ...(prev.messages ?? []),
@@ -156,6 +159,10 @@ export function Thread() {
             newHumanMessage,
           ],
         }),
+        metadata: {
+          ...getThreadSearchMetadata(stream.assistantId),
+          user_id: userId,
+        },
       },
     );
 

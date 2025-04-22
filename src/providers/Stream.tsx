@@ -5,7 +5,7 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import { useStream } from "@langchain/langgraph-sdk/react";
+import { useStream } from "../lib/stream";
 import { type Message } from "@langchain/langgraph-sdk";
 import {
   uiMessageReducer,

@@ -1,7 +1,8 @@
-import { validate } from "uuid";
+import { v4, validate } from "uuid";
 import { getApiKey } from "@/lib/api-key";
 import { Thread } from "@langchain/langgraph-sdk";
 import { useQueryState } from "nuqs";
+import { useLocalStorage } from 'usehooks-ts'
 import {
   createContext,
   useContext,
@@ -10,6 +11,7 @@ import {
   useState,
   Dispatch,
   SetStateAction,
+  useEffect,
 } from "react";
 import { createClient } from "./client";
 
@@ -19,11 +21,12 @@ interface ThreadContextType {
   setThreads: Dispatch<SetStateAction<Thread[]>>;
   threadsLoading: boolean;
   setThreadsLoading: Dispatch<SetStateAction<boolean>>;
+  userId: string;
 }
 
 const ThreadContext = createContext<ThreadContextType | undefined>(undefined);
 
-function getThreadSearchMetadata(
+export function getThreadSearchMetadata(
   assistantId: string,
 ): { graph_id: string } | { assistant_id: string } {
   if (validate(assistantId)) {
@@ -34,24 +37,36 @@ function getThreadSearchMetadata(
 }
 
 export function ThreadProvider({ children }: { children: ReactNode }) {
-  const [apiUrl] = useQueryState("apiUrl");
-  const [assistantId] = useQueryState("assistantId");
+  const [apiUrl] = useQueryState("apiUrl") || [process.env.NEXT_PUBLIC_API_URL];
+  const [assistantId] = useQueryState("assistantId") || [process.env.NEXT_PUBLIC_ASSISTANT_ID];
   const [threads, setThreads] = useState<Thread[]>([]);
   const [threadsLoading, setThreadsLoading] = useState(false);
-
+  const [userId, setUserId, _removeUserId] = useLocalStorage("userId", "");
+  
   const getThreads = useCallback(async (): Promise<Thread[]> => {
-    if (!apiUrl || !assistantId) return [];
-    const client = createClient(apiUrl, getApiKey() ?? undefined);
+    const envApiUrl = apiUrl || process.env.NEXT_PUBLIC_API_URL;
+    const envAssistantId = assistantId || process.env.NEXT_PUBLIC_ASSISTANT_ID;
+
+    if (!envApiUrl || !envAssistantId) return [];
+    const client = createClient(envApiUrl, getApiKey() ?? undefined);
 
     const threads = await client.threads.search({
       metadata: {
-        ...getThreadSearchMetadata(assistantId),
+        ...getThreadSearchMetadata(envAssistantId),
+        user_id: userId,
       },
       limit: 100,
     });
 
     return threads;
-  }, [apiUrl, assistantId]);
+  }, [apiUrl, assistantId, userId]);
+
+  useEffect(() => {
+    if (!userId) {
+      const newUserId = v4();
+      setUserId(newUserId);
+    }
+  }, [userId, setUserId]);
 
   const value = {
     getThreads,
@@ -59,6 +74,7 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
     setThreads,
     threadsLoading,
     setThreadsLoading,
+    userId,
   };
 
   return (
