@@ -28,13 +28,6 @@ import { toast } from "sonner";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
-import { GitHubSVG } from "../icons/github";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../ui/tooltip";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -74,30 +67,6 @@ function ScrollToBottom(props: { className?: string }) {
       <ArrowDown className="h-4 w-4" />
       <span>Scroll to bottom</span>
     </Button>
-  );
-}
-
-function OpenGitHubRepo() {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <a
-            href="https://github.com/langchain-ai/agent-chat-ui"
-            target="_blank"
-            className="flex items-center justify-center"
-          >
-            <GitHubSVG
-              width="24"
-              height="24"
-            />
-          </a>
-        </TooltipTrigger>
-        <TooltipContent side="left">
-          <p>Open GitHub repo</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
   );
 }
 
@@ -273,9 +242,6 @@ export function Thread() {
                 </Button>
               )}
             </div>
-            <div className="absolute top-2 right-4 flex items-center">
-              <OpenGitHubRepo />
-            </div>
           </div>
         )}
         {chatStarted && (
@@ -308,24 +274,26 @@ export function Thread() {
                   damping: 30,
                 }}
               >
-                <LangGraphLogoSVG
-                  width={32}
-                  height={32}
-                />
+                {process.env.NEXT_PUBLIC_APP_LOGO ? (
+                  <img
+                    src={process.env.NEXT_PUBLIC_APP_LOGO}
+                    alt={process.env.NEXT_PUBLIC_APP_NAME}
+                    className="flex-shrink-0 h-8"
+                  />
+                ) : (
+                  <LangGraphLogoSVG width={32} height={32} />
+                )}
                 <span className="text-xl font-semibold tracking-tight">
-                  Agent Chat
+                  {process.env.NEXT_PUBLIC_APP_NAME ?? "Agent Chat"}
                 </span>
               </motion.button>
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center">
-                <OpenGitHubRepo />
-              </div>
               <TooltipIconButton
                 size="lg"
                 className="p-4"
-                tooltip="New thread"
+                tooltip="새 대화"
                 variant="ghost"
                 onClick={() => setThreadId(null)}
               >
@@ -383,10 +351,18 @@ export function Thread() {
             footer={
               <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-white">
                 {!chatStarted && (
-                  <div className="flex items-center gap-3">
-                    <LangGraphLogoSVG className="h-8 flex-shrink-0" />
+                  <div className="flex gap-3 items-center">
+                    {process.env.NEXT_PUBLIC_APP_LOGO ? (
+                      <img
+                        src={process.env.NEXT_PUBLIC_APP_LOGO}
+                        alt={process.env.NEXT_PUBLIC_APP_NAME}
+                        className="flex-shrink-0 h-8"
+                      />
+                    ) : (
+                      <LangGraphLogoSVG className="flex-shrink-0 h-8" />
+                    )}
                     <h1 className="text-2xl font-semibold tracking-tight">
-                      Agent Chat
+                      {process.env.NEXT_PUBLIC_APP_NAME ?? "Agent Chat"}
                     </h1>
                   </div>
                 )}
@@ -414,8 +390,8 @@ export function Thread() {
                           form?.requestSubmit();
                         }
                       }}
-                      placeholder="Type your message..."
-                      className="field-sizing-content resize-none border-none bg-transparent p-3.5 pb-0 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none"
+                      placeholder="메세지를 입력해주세요..."
+                      className="p-3.5 pb-0 border-none bg-transparent field-sizing-content shadow-none ring-0 outline-none focus:outline-none focus:ring-0 resize-none"
                     />
 
                     <div className="flex items-center justify-between p-2 pt-4">
@@ -430,17 +406,14 @@ export function Thread() {
                             htmlFor="render-tool-calls"
                             className="text-sm text-gray-600"
                           >
-                            Hide Tool Calls
+                            도구 호출 숨기기
                           </Label>
                         </div>
                       </div>
                       {stream.isLoading ? (
-                        <Button
-                          key="stop"
-                          onClick={() => stream.stop()}
-                        >
-                          <LoaderCircle className="h-4 w-4 animate-spin" />
-                          Cancel
+                        <Button key="stop" onClick={() => stream.stop()}>
+                          <LoaderCircle className="w-4 h-4 animate-spin" />
+                          취소
                         </Button>
                       ) : (
                         <Button
@@ -448,7 +421,7 @@ export function Thread() {
                           className="shadow-md transition-all"
                           disabled={isLoading || !input.trim()}
                         >
-                          Send
+                          전송
                         </Button>
                       )}
                     </div>
