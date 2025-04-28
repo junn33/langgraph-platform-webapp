@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef, ChangeEvent } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useStreamContext } from "@/providers/Stream";
@@ -20,6 +20,8 @@ import {
   PanelRightOpen,
   PanelRightClose,
   SquarePen,
+  Plus,
+  CircleX,
 } from "lucide-react";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
@@ -29,6 +31,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
 import { getThreadSearchMetadata, useThreads } from "@/providers/Thread";
+import { MessageContentImageUrl } from "@langchain/core/messages";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -82,12 +85,15 @@ export function Thread() {
     parseAsBoolean.withDefault(false),
   );
   const [input, setInput] = useState("");
+  const [imageUrlList, setImageUrlList] = useState<MessageContentImageUrl[]>(
+    [],
+  );
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
 
   const stream = useStreamContext();
   const { userId } = useThreads();
-  
+
   const messages = stream.messages;
   const isLoading = stream.isLoading;
 
@@ -143,9 +149,14 @@ export function Thread() {
     const newHumanMessage: Message = {
       id: uuidv4(),
       type: "human",
-      content: input,
+      content: [
+        {
+          type: "text",
+          text: input,
+        },
+        ...imageUrlList,
+      ],
     };
-
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
     stream.submit(
       { messages: [...toolMessages, newHumanMessage] },
@@ -167,6 +178,31 @@ export function Thread() {
     );
 
     setInput("");
+    setImageUrlList([]);
+  };
+
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const imageUrls = await Promise.all(
+        Array.from(files).map((file) => {
+          return new Promise<MessageContentImageUrl>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              resolve({
+                type: "image_url",
+                image_url: {
+                  url: reader.result as string,
+                },
+              });
+            };
+            reader.readAsDataURL(file);
+          });
+        }),
+      );
+      setImageUrlList([...imageUrlList, ...imageUrls]);
+    }
+    e.target.value = "";
   };
 
   const handleRegenerate = (
@@ -285,10 +321,13 @@ export function Thread() {
                   <img
                     src={process.env.NEXT_PUBLIC_APP_LOGO}
                     alt={process.env.NEXT_PUBLIC_APP_NAME}
-                    className="flex-shrink-0 h-8"
+                    className="h-8 flex-shrink-0"
                   />
                 ) : (
-                  <LangGraphLogoSVG width={32} height={32} />
+                  <LangGraphLogoSVG
+                    width={32}
+                    height={32}
+                  />
                 )}
                 <span className="text-xl font-semibold tracking-tight">
                   {process.env.NEXT_PUBLIC_APP_NAME ?? "Agent Chat"}
@@ -358,15 +397,15 @@ export function Thread() {
             footer={
               <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-white">
                 {!chatStarted && (
-                  <div className="flex gap-3 items-center">
+                  <div className="flex items-center gap-3">
                     {process.env.NEXT_PUBLIC_APP_LOGO ? (
                       <img
                         src={process.env.NEXT_PUBLIC_APP_LOGO}
                         alt={process.env.NEXT_PUBLIC_APP_NAME}
-                        className="flex-shrink-0 h-8"
+                        className="h-8 flex-shrink-0"
                       />
                     ) : (
-                      <LangGraphLogoSVG className="flex-shrink-0 h-8" />
+                      <LangGraphLogoSVG className="h-8 flex-shrink-0" />
                     )}
                     <h1 className="text-2xl font-semibold tracking-tight">
                       {process.env.NEXT_PUBLIC_APP_NAME ?? "Agent Chat"}
@@ -381,6 +420,38 @@ export function Thread() {
                     onSubmit={handleSubmit}
                     className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2"
                   >
+                    {imageUrlList.length > 0 && (
+                      <div className="flex flex-wrap gap-2 p-3.5 pb-0">
+                        {imageUrlList.map((imageUrl) => {
+                          const imageUrlString =
+                            typeof imageUrl.image_url === "string"
+                              ? imageUrl.image_url
+                              : imageUrl.image_url.url;
+                          return (
+                            <div
+                              className="relative"
+                              key={imageUrlString}
+                            >
+                              <img
+                                src={imageUrlString}
+                                alt="uploaded"
+                                className="h-16 w-16 rounded-md object-cover"
+                              />
+                              <CircleX
+                                className="absolute top-[2px] right-[2px] size-4 cursor-pointer rounded-full bg-gray-500 text-white"
+                                onClick={() =>
+                                  setImageUrlList(
+                                    imageUrlList.filter(
+                                      (url) => url !== imageUrl,
+                                    ),
+                                  )
+                                }
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                     <textarea
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
@@ -398,11 +469,28 @@ export function Thread() {
                         }
                       }}
                       placeholder="메세지를 입력해주세요..."
-                      className="p-3.5 pb-0 border-none bg-transparent field-sizing-content shadow-none ring-0 outline-none focus:outline-none focus:ring-0 resize-none"
+                      className="field-sizing-content resize-none border-none bg-transparent p-3.5 pb-0 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none"
                     />
 
                     <div className="flex items-center justify-between p-2 pt-4">
-                      <div>
+                      <div className="flex items-center gap-2">
+                        <Label
+                          htmlFor="file-input"
+                          className="flex cursor-pointer items-center gap-2"
+                        >
+                          <Plus className="size-5 text-gray-600" />
+                          <span className="text-sm text-gray-600">
+                            Upload Images
+                          </span>
+                        </Label>
+                        <input
+                          id="file-input"
+                          type="file"
+                          onChange={handleImageUpload}
+                          multiple
+                          accept="image/*"
+                          className="hidden"
+                        />
                         <div className="flex items-center space-x-2">
                           <Switch
                             id="render-tool-calls"
@@ -418,8 +506,11 @@ export function Thread() {
                         </div>
                       </div>
                       {stream.isLoading ? (
-                        <Button key="stop" onClick={() => stream.stop()}>
-                          <LoaderCircle className="w-4 h-4 animate-spin" />
+                        <Button
+                          key="stop"
+                          onClick={() => stream.stop()}
+                        >
+                          <LoaderCircle className="h-4 w-4 animate-spin" />
                           취소
                         </Button>
                       ) : (
