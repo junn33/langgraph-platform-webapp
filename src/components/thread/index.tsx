@@ -480,7 +480,7 @@ export function Thread() {
                         >
                           <Plus className="size-5 text-gray-600" />
                           <span className="text-sm text-gray-600">
-                            Upload Images
+                            이미지 업로드
                           </span>
                         </Label>
                         <input

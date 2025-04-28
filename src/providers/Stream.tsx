@@ -164,12 +164,12 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
             <div className="flex flex-col items-start gap-2">
               <LangGraphLogoSVG className="h-7" />
               <h1 className="text-xl font-semibold tracking-tight">
-                Agent Chat
+                LangGraph Platform WebApp
               </h1>
             </div>
             <p className="text-muted-foreground">
-              Welcome to Agent Chat! Before you get started, you need to enter
-              the URL of the deployment and the assistant / graph ID.
+              LangGraph Platform WebApp 에 오신 것을 환영합니다! 시작하기 전에
+              배포 URL과 어시스턴트 / 그래프 ID를 입력해야 합니다.
             </p>
           </div>
           <form
@@ -195,8 +195,8 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
                 Deployment URL<span className="text-rose-500">*</span>
               </Label>
               <p className="text-muted-foreground text-sm">
-                This is the URL of your LangGraph deployment. Can be a local, or
-                production deployment.
+                이 값은 배포된 LangGraph 서버의 URL입니다. 로컬 또는 프로덕션
+                배포일 수 있습니다.
               </p>
               <Input
                 id="apiUrl"
@@ -212,9 +212,8 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
                 Assistant / Graph ID<span className="text-rose-500">*</span>
               </Label>
               <p className="text-muted-foreground text-sm">
-                This is the ID of the graph (can be the graph name), or
-                assistant to fetch threads from, and invoke when actions are
-                taken.
+                이 값은 그래프의 ID(그래프 이름) 또는 스레드를 가져오고 작업을
+                호출할 때 사용할 어시스턴트의 ID입니다.
               </p>
               <Input
                 id="assistantId"
@@ -228,10 +227,10 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
             <div className="flex flex-col gap-2">
               <Label htmlFor="apiKey">LangSmith API Key</Label>
               <p className="text-muted-foreground text-sm">
-                This is <strong>NOT</strong> required if using a local LangGraph
-                server. This value is stored in your browser's local storage and
-                is only used to authenticate requests sent to your LangGraph
-                server.
+                로컬 LangGraph 서버를 사용하는 경우 이 값은
+                <strong> 필요하지 않습니다</strong>. 이 값은 브라우저의 로컬
+                스토리지에 저장되며 LangGraph 서버에 보내는 요청을
+                인증하는데에만 사용됩니다.
               </p>
               <PasswordInput
                 id="apiKey"
