@@ -118,8 +118,13 @@ Next.js 에 익숙하지 않으신 분들은 아래 가이드를 참고해주세
 
 ### Vercel 로 3분 안에 배포하기
 
+> [!WARNING]  
+> [Vercel Hobby](https://vercel.com/pricing)를 사용하는 경우, Vercel의 제한으로 인해 메시지가 잘릴 수 있습니다.
+
 1. 이 Repository 를 클론 or Use this Template 을 통해, 본인의 Repository 로 생성
+   ![](./assets/deploy-vercel-1.png)
 2. 해당 Repo 를 [Vercel 페이지](https://vercel.com/new) 에서 권한 부여해서 가져오기
+   ![](./assets/deploy-vercel-2.png)
 3. 해당 Repo 를 Import 버튼 누르고 환경변수 입력 후 > Deploy 버튼 클릭
    ![](./assets/deploy-vercel-3.png)
 4. 배포 완료
@@ -137,6 +142,6 @@ Next.js 에 익숙하지 않으신 분들은 아래 가이드를 참고해주세
 4. 추가 후 기다리면 자동으로 커스텀 도메인 연결 + https 설정
    ![](./assets/deploy-vercel-7.png)
 
-
 ## License
+
 MIT License
